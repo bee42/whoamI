@@ -1,0 +1,58 @@
+# Default values for whoami.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: bee42/whoami
+  tag: 1.2.0
+  pullPolicy: IfNotPresent
+  pullSecret:
+    name: whoami
+    enabled: false
+
+imageCredential:
+  registry: r-gitlab.bee42.com
+  username: xxxx
+  password: xxxx
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  path: /
+  hosts:
+    - kube-01.training.westeurope.azure.com
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #  cpu: 100m
+  #  memory: 128Mi
+  # requests:
+  #  cpu: 100m
+  #  memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+nginx-ingress:
+  enabled: false
+  controller.metrics.enabled: true
+  rbac.create: true
+  ssl-redirect: false
+  controller.service.type: NodePort
+  controller.service.nodePorts.http: 30180

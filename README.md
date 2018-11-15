@@ -58,6 +58,17 @@ $ curl 127.0.0.1:8087/metrics
 
 Currently the request of ´/api´ and ´/´ are measured.
 
+### Kubernetes deployment with the helm charts
+
+```
+$ cd whoami
+$ helm install -n whoami --namespace whoami .
+```
+
+With `--set nginx-ingress.enabled=true`you can deploy a local NodePort nginx
+
+Look inside values.yaml for more options.
+
 ### Links of metrics
 
 * https://prometheus.io/docs/guides/go-application/
