@@ -25,7 +25,7 @@ ingress:
   enabled: true
   path: /
   hosts:
-    - kube-01.training.westeurope.azure.com
+    - kube-01.training.westeurope.cloudapp.azure.com
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:
