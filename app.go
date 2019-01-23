@@ -1,13 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
-	"sync"
+	"sync/atomic"
 
 	"github.com/gorilla/websocket"
 	yaml "gopkg.in/yaml.v2"
+
 	// "github.com/pkg/profile"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -20,7 +22,11 @@ import (
 	"time"
 )
 
-var port string
+var (
+	port    string
+	healthy int32
+	ready   int32
+)
 
 func init() {
 	flag.StringVar(&port, "port", "80", "give me a port number")
@@ -37,12 +43,19 @@ func main() {
 	http.HandleFunc("/echo", echoHandler)
 	http.HandleFunc("/bench", benchHandler)
 	http.HandleFunc("/health", healthHandler)
+	http.HandleFunc("/healthz", healthHandler)
+	http.HandleFunc("/readyz", readyzHandler)
+	http.HandleFunc("/readyz/enable", enableReadyHandler)
+	http.HandleFunc("/readyz/disable", disableReadyHandler)
+
 	http.HandleFunc("/version", version)
 	http.Handle("/metrics", promhttp.Handler())
 	http.HandleFunc("/", prometheus.InstrumentHandlerFunc("whoamI", whoamI))
 	http.HandleFunc("/api", prometheus.InstrumentHandlerFunc("api", api))
 
 	fmt.Println("Starting up on port " + port)
+	atomic.StoreInt32(&healthy, 1)
+	atomic.StoreInt32(&ready, 1)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
 
@@ -137,33 +150,6 @@ func api(w http.ResponseWriter, req *http.Request) {
 	json.NewEncoder(w).Encode(data)
 }
 
-type healthState struct {
-	StatusCode int
-}
-
-var currentHealthState = healthState{200}
-var mutexHealthState = &sync.RWMutex{}
-
-func healthHandler(w http.ResponseWriter, req *http.Request) {
-	if req.Method == http.MethodPost {
-		var statusCode int
-		err := json.NewDecoder(req.Body).Decode(&statusCode)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
-		} else {
-			fmt.Printf("Update health check status code [%d]\n", statusCode)
-			mutexHealthState.Lock()
-			defer mutexHealthState.Unlock()
-			currentHealthState.StatusCode = statusCode
-		}
-	} else {
-		mutexHealthState.RLock()
-		defer mutexHealthState.RUnlock()
-		w.WriteHeader(currentHealthState.StatusCode)
-	}
-}
-
 func version(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/version" {
 		w.WriteHeader(http.StatusNotFound)
@@ -186,9 +172,55 @@ func version(w http.ResponseWriter, r *http.Request) {
 	w.Write(d)
 }
 
+func healthHandler(w http.ResponseWriter, r *http.Request) {
+	if atomic.LoadInt32(&healthy) == 1 {
+		jsonResponse(w, r, map[string]string{"status": "OK"})
+		return
+	}
+	w.WriteHeader(http.StatusServiceUnavailable)
+}
+
+func readyzHandler(w http.ResponseWriter, r *http.Request) {
+	if atomic.LoadInt32(&ready) == 1 {
+		jsonResponse(w, r, map[string]string{"status": "OK"})
+		return
+	}
+	w.WriteHeader(http.StatusServiceUnavailable)
+}
+
+func enableReadyHandler(w http.ResponseWriter, r *http.Request) {
+	atomic.StoreInt32(&ready, 1)
+	w.WriteHeader(http.StatusAccepted)
+}
+
+func disableReadyHandler(w http.ResponseWriter, r *http.Request) {
+	atomic.StoreInt32(&ready, 0)
+	w.WriteHeader(http.StatusAccepted)
+}
+
 func getEnv(key, fallback string) string {
 	if value, ok := os.LookupEnv(key); ok {
 		return value
 	}
 	return fallback
+}
+
+func jsonResponse(w http.ResponseWriter, r *http.Request, result interface{}) {
+	body, err := json.Marshal(result)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Errorf("JSON marshal failed: %s", err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.WriteHeader(http.StatusOK)
+	w.Write(prettyJSON(body))
+}
+
+func prettyJSON(b []byte) []byte {
+	var out bytes.Buffer
+	json.Indent(&out, b, "", "  ")
+	return out.Bytes()
 }
