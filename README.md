@@ -58,6 +58,38 @@ $ curl 127.0.0.1:8087/metrics
 
 Currently the request of ´/api´ and ´/´ are measured.
 
+### 2.2.0
+
+* `GET /healthz` get OK like /health
+* `GET /readyz` Get OK readyness check
+* `GET /readyz/enable` Enable readyness
+* `GET /readyz/disable` Disable readyness
+
+```
+$ docker run -d -p 8087:80 -e WHOAMI_VERSION=2.2.0-release bee42/whoami:2.2.0
+$ curl 127.0.0.1:8087/version
+$ curl 127.0.0.1:8087/api
+$ curl -i 127.0.0.1:8087/healhz
+$ curl -i 127.0.0.1:8087/readyz
+$ curl -i 127.0.0.1:8087/readyz/disable
+$ curl -i 127.0.0.1:8087/readyz
+$ curl -i 127.0.0.1:8087/readyz/enable
+```
+
+With this checks you can better test your kubernetes pod
+failure procedures (Services, Autoscale)
+
+### 2.2.1
+
+* Build Multiarch binaries
+* Use alpine 3.9 and golang 1.11.5
+
+```
+$ docker run -d -p 8087:80 -e WHOAMI_VERSION=2.2.1-release bee42/whoami:2.2.1
+$ curl 127.0.0.1:8087/version
+$ docker manifest inspect bee42/whoami:2.2.1
+```
+
 ### Kubernetes deployment with the helm charts
 
 ```

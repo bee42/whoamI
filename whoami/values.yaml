@@ -6,7 +6,7 @@ replicaCount: 1
 
 image:
   repository: bee42/whoami
-  tag: 1.2.0
+  tag: 2.2.1
   pullPolicy: IfNotPresent
   pullSecret:
     name: whoami
@@ -22,10 +22,11 @@ service:
   port: 80
 
 ingress:
-  enabled: true
+  enabled: false
   path: /
   hosts:
     - kube-01.training.westeurope.cloudapp.azure.com
+#    - whoami.<ip>.nip.io
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:
