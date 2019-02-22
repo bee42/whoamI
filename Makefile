@@ -52,7 +52,7 @@ push-multiarch:
 	  case $${arch} in \
 			amd64 ) manifest_annotate="" ;; \
 			arm   ) manifest_annotate="--os linux --arch arm" ;; \
-			arm64 ) manifest_annotate="--os linux --arch arm64 --variant armv8" ;; \
+			arm64 ) manifest.annotate="--os linux --arch arm64 --variant v8" ;; \
 	  esac ; \
  		docker manifest annotate $(DOCKER_IMAGE):$(MANIFEST_TAG) $(DOCKER_IMAGE):$(DOCKER_TAG)-$${arch} $${manifest_annotate} ;\
  	done
