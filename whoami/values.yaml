@@ -6,7 +6,7 @@ replicaCount: 1
 
 image:
   repository: bee42/whoami
-  tag: 2.2.1
+  tag: multiarch
   pullPolicy: IfNotPresent
   pullSecret:
     name: whoami
@@ -25,12 +25,13 @@ ingress:
   enabled: false
   path: /
   hosts:
-    - kube-01.training.westeurope.cloudapp.azure.com
-#    - whoami.<ip>.nip.io
+    -  whoami.bee42.192.168.42.32.nip.io
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:
   #      - chart-example.local
+  annotations:
+    kubernetes.io/ingress.class: traefik 
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -43,6 +44,9 @@ resources: {}
   # requests:
   #  cpu: 100m
   #  memory: 128Mi
+labels:
+  blinkt: show
+  blinktColor: 00FF00
 
 nodeSelector: {}
 
@@ -57,3 +61,24 @@ nginx-ingress:
   ssl-redirect: false
   controller.service.type: NodePort
   controller.service.nodePorts.http: 30180
+
+traefik:
+  enabled: false
+  serviceType: NodePort
+  imageTag: 1.7.9
+  rbac:
+    enabled: true
+  dashboard:
+    enabled: true
+  accessLogs:
+    enabled: true
+  debug:
+    enabled: true
+  ssl:
+    enabled: false
+    enforced: false
+  acme:
+    enabled: false
+  metrics:
+    prometheus:
+      enabled: true

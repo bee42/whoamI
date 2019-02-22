@@ -101,6 +101,13 @@ With `--set nginx-ingress.enabled=true`you can deploy a local NodePort nginx
 
 Look inside values.yaml for more options.
 
+### Fix some problems at kubernetes
+
+```
+$ kubectl delete pod --grace-period=0 --force \
+   `kubectl get pods -l app=whoami | awk '$3 == "CrashLoopBackOff" {print $1}'`
+```
+
 ### Links of metrics
 
 * https://prometheus.io/docs/guides/go-application/

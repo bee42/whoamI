@@ -18,6 +18,9 @@ spec:
       labels:
         app: {{ template "whoami.name" . }}
         release: {{ .Release.Name }}
+{{- with .Values.labels }}
+{{ toYaml . | indent 8 }}
+{{- end }}
     spec:
 {{- if .Values.image.pullSecret.enabled }}
       imagePullSecrets:
