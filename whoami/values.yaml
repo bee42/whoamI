@@ -56,3 +56,8 @@ nginx-ingress:
   ssl-redirect: false
   controller.service.type: NodePort
   controller.service.nodePorts.http: 30180
+  
+annotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "80"
+  prometheus.io/path: "/metrics"
