@@ -1,4 +1,4 @@
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: whoami
@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: whoami
-        image: bee42/whoami:1.2.0
+        image: bee42/whoami:2.2.0
         imagePullPolicy: Always
         ports: 
         - containerPort: 80
